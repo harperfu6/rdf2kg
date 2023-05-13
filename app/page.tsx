@@ -1,6 +1,7 @@
 "use client";
 
 import useSWR from "swr";
+import MyGraph2D, { triple2GraphData } from "./components/MyGraph2D";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -10,9 +11,14 @@ const Home = () => {
   if (error) return <div>Error</div>;
   if (isLoading) return <div>Loading...</div>;
 
-  console.log(data);
+  const graphData = triple2GraphData(data);
+  console.log(graphData);
 
-  return <></>;
+  return (
+    <>
+      <MyGraph2D graphData={graphData} />
+    </>
+  );
 };
 
 export default Home;
