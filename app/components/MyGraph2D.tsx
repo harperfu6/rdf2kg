@@ -29,7 +29,7 @@ type MyNodeObject = NodeObject & {
 
 type MyLinkObject = LinkObject & {};
 
-type GraphData = {
+export type GraphData = {
   nodes: MyNodeObject[];
   links: MyLinkObject[];
 };
@@ -38,11 +38,11 @@ type Graph2DProps = {
   graphData: GraphData;
 };
 
-export const filterNodes = (
+export const filterNodes = async (
   nodes: MyNodeObject[],
   filterWord: string,
   searchWord: string
-) => {
+): Promise<MyNodeObject> => {
   const filteredNodes = nodes.filter((node) => {
     return node.id.includes(filterWord);
   });
@@ -50,22 +50,21 @@ export const filterNodes = (
     return node.id === searchWord;
   });
   filteredNodes.push(searchNode[0]);
-  console.log(filteredNodes);
   return filteredNodes;
 };
 
-export const filterLinks = (
+export const filterLinks = async (
   links: MyLinkObject[],
   filterWord: string,
   searchWord: string
-) => {
+): Promise<MyLinkObject> => {
   const filteredLinks = links.filter((link) => {
     return link.source === searchWord && link.target.includes(filterWord);
   });
   return filteredLinks;
 };
 
-export const triple2GraphData = (triples: tripleType[]): GraphData => {
+export const triple2GraphData = async (triples: tripleType[]): Promise<GraphData> => {
   const nodes: MyNodeObject[] = [];
   const links: MyLinkObject[] = [];
   const nodeMap: Map<string, MyNodeObject> = new Map();
