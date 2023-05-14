@@ -2,10 +2,6 @@ import { SparqlEndpointFetcher } from "fetch-sparql-endpoint";
 import arrayifyStream from "arrayify-stream";
 import { rawResponseType, tripleType } from "@/app/model/rdf";
 
-// const SEARCH_WORD = "東京都";
-const SEARCH_WORD = "ローソン";
-// const SEARCH_WORD = "東証一部上場企業";
-
 const PREFIX = `
 PREFIX prop-ja: <http://ja.dbpedia.org/property/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -16,23 +12,23 @@ PREFIX dcterms: <http://purl.org/dc/terms/>
 
 const p = "dcterms:subject";
 
-const SELECT_QUERY = `
+const SELECT_QUERY = (searchWord: string) => `
 SELECT DISTINCT *
 WHERE
 {
-  <http://ja.dbpedia.org/resource/${SEARCH_WORD}> ${p} ?o .
+  <http://ja.dbpedia.org/resource/${searchWord}> ${p} ?o .
 }
 `;
 
-const SELECT_QUERY_GENERAL = `
+const SELECT_QUERY_GENERAL = (searchWord: string) => `
 SELECT DISTINCT *
 WHERE
 {
-  <http://ja.dbpedia.org/resource/${SEARCH_WORD}> ?p ?o .
+  <http://ja.dbpedia.org/resource/${searchWord}> ?p ?o .
 }
 `;
 
-const queryReq = async () => {
+const queryReq = async (searchWord: string) => {
   const config = {
     method: "GET",
   };
@@ -40,17 +36,18 @@ const queryReq = async () => {
   const endpoint = "http://ja.dbpedia.org/sparql";
   const query = `
 	${PREFIX}
-	${SELECT_QUERY_GENERAL}
+	${SELECT_QUERY_GENERAL(searchWord)}
 	`;
   return await arrayifyStream(await fether.fetchBindings(endpoint, query));
 };
 
-const raw2response = function (
+const raw2response = (
+  searchWord: string,
   rawResponseList: rawResponseType[]
-): tripleType[] {
+): tripleType[] => {
   return rawResponseList.map((rawResponse: rawResponseType) => {
     return {
-      s: SEARCH_WORD,
+      s: searchWord,
       p: rawResponse.p.value,
       o: rawResponse.o.value,
     };
@@ -58,8 +55,10 @@ const raw2response = function (
 };
 
 export const GET = async (request: Request) => {
-  const rawResponseList = await queryReq();
-  const responseList = raw2response(rawResponseList);
-  // const responseList = rawResponseList;
+  const { searchParams } = new URL(request.url);
+  const searchWord = searchParams.get("searchWord");
+
+  const rawResponseList = await queryReq(searchWord);
+  const responseList = raw2response(searchWord, rawResponseList);
   return new Response(JSON.stringify(responseList));
 };
