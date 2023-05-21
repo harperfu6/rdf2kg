@@ -7,8 +7,12 @@ import useSWRMutation from "swr/mutation";
 import MyGraph2D, {
   filterLinks,
   filterNodes,
+  MyLinkObject,
+  MyNodeObject,
   triple2GraphData,
 } from "./components/MyGraph2D";
+import SearchList from "./components/SearchList";
+import { removeDuplicateText } from "./utils";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -27,7 +31,7 @@ const Home = () => {
   const [graphViewHeight, setGraphViewHeight] = useState<number>(0);
 
   const [searchWord, setSearchWord] = useState<string>("ローソン");
-  const [filterWord, setFilterWord] = useState<string>("Category");
+  const [filterWord, setFilterWord] = useState<string>("");
   const [graphData, setGraphData] = useState<GraphData>({
     nodes: [],
     links: [],
@@ -36,6 +40,13 @@ const Home = () => {
     nodes: [],
     links: [],
   });
+
+  const [filteredNodesTextList, setFilteredNodesTextList] = useState<string[]>(
+    []
+  );
+  const [filteredLinksTextList, setFilteredLinksTextList] = useState<string[]>(
+    []
+  );
 
   const {
     trigger: searchWordTrigger,
@@ -68,51 +79,77 @@ const Home = () => {
       filterWord,
       searchWord
     );
-    const filteredGraphData = {
+    const _filteredGraphData = {
       nodes: filteredNodes,
       links: filteredLinks,
     };
     setGraphData(_graphData);
-    setFilteredGraphData(filteredGraphData);
+    setFilteredGraphData(_filteredGraphData);
+		console.log(_filteredGraphData);
+  };
+
+  const onFilter = async () => {
+    // 取得済みグラフデータからフィルタリング
+    const _filteredNodes = graphData.nodes.filter((node: MyNodeObject) =>
+      filteredNodesTextList.includes(node.id)
+    );
+
+    const _filteredLinks = graphData.links.filter((link: MyLinkObject) =>
+      filteredNodesTextList.includes(link.target.id)
+    );
+
+    const _filteredGraphData = {
+      nodes: _filteredNodes,
+      links: _filteredLinks,
+    };
+		{/* console.log(_filteredGraphData); */}
+    setFilteredGraphData(_filteredGraphData);
   };
 
   return (
     <>
-      <div className="space-y-4">
-        <div className="my-4 space-y-2">
-          <div>
+      <div className="flex flex-row my-4">
+        <div className="basis-1/6 mx-2 space-y-2">
+          <div className="flex flex-row">
             <input
               type="text"
               value={searchWord}
               onChange={(e) => setSearchWord(e.target.value)}
-              className="border border-gray-400 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="basis-3/4 border border-gray-400 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={onSearch}
-              className="bg-blue-500 hover:bg-blue-400 text-white rounded px-4 py-2"
+              className="basis-1/4 bg-blue-500 hover:bg-blue-400 text-white px-4 py-2"
             >
               Search
             </button>
           </div>
-          <div>
-            <input
-              type="text"
-              value={filterWord}
-              onChange={(e) => setFilterWord(e.target.value)}
-              className="border border-gray-400 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+          {filteredGraphData.nodes.length > 0 && (
+            <SearchList
+              contentList={removeDuplicateText(
+                filteredGraphData.nodes.map((node: MyNodeObject) => node.id)
+              )}
+              checkedContentList={filteredNodesTextList}
+              setCheckedContentList={setFilteredNodesTextList}
+              onSubmitContentList={onFilter}
             />
-            <button
-              onClick={onSearch}
-              className="bg-blue-500 hover:bg-blue-400 text-white rounded px-4 py-2"
-            >
-              Filter
-            </button>
-          </div>
+          )}
+          {filteredGraphData.links.length > 0 && (
+            <SearchList
+              contentList={removeDuplicateText(
+                filteredGraphData.links.map((link: MyLinkObject) => link.id)
+              )}
+              checkedContentList={filteredLinksTextList}
+              setCheckedContentList={setFilteredLinksTextList}
+              onSubmitContentList={onFilter}
+            />
+          )}
         </div>
 
         <div
           ref={divRef}
-          className="w-screen h-screen max-h-[80vh] border border-solid border-black"
+          className="basis-4/6 h-screen max-h-[80vh] mx-2 border border-solid border-black"
         >
           {isMutating && (
             <div className="flex justify-center items-center h-screen max-h-[80vh]">

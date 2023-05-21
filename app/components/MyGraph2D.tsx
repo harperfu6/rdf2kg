@@ -17,11 +17,13 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
 
 import { tripleType } from "../model/rdf";
 
-type MyNodeObject = NodeObject & {
+export type MyNodeObject = NodeObject & {
   group: string;
 };
 
-type MyLinkObject = LinkObject & {};
+export type MyLinkObject = LinkObject & {
+	id: string;
+};
 
 export type GraphData = {
   nodes: MyNodeObject[];
@@ -81,6 +83,7 @@ export const triple2GraphData = async (
       nodes.push(node);
     }
     const link: MyLinkObject = {
+			id: predicate,
       source: subject,
       target: object,
     };
