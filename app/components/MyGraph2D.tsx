@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { NodeObject } from "react-force-graph-3d";
 
 // require()はnodejs上でのみ動作するので、use clientと併用する場合はdynamicを使ってサーバー側で処理してから読み込むようにする
 const ReactForceGraph3D = dynamic(() => import("react-force-graph-3d"), {
@@ -11,17 +12,10 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
 });
 
 // エディタのエラーを回避するため。動作確認時はコメントアウトする
-{
-  /* import { LinkObject, NodeObject } from "react-force-graph-3d"; */
-}
-{
-  /* import { ForceGraph2D } from "react-force-graph"; */
-}
+// import { LinkObject, NodeObject } from "react-force-graph-3d";
+// import { ForceGraph2D } from "react-force-graph";
 
 import { tripleType } from "../model/rdf";
-
-const containerWidth = 1000;
-const containerHeight = 1000;
 
 type MyNodeObject = NodeObject & {
   group: string;
@@ -32,10 +26,6 @@ type MyLinkObject = LinkObject & {};
 export type GraphData = {
   nodes: MyNodeObject[];
   links: MyLinkObject[];
-};
-
-type Graph2DProps = {
-  graphData: GraphData;
 };
 
 export const filterNodes = async (
@@ -64,7 +54,9 @@ export const filterLinks = async (
   return filteredLinks;
 };
 
-export const triple2GraphData = async (triples: tripleType[]): Promise<GraphData> => {
+export const triple2GraphData = async (
+  triples: tripleType[]
+): Promise<GraphData> => {
   const nodes: MyNodeObject[] = [];
   const links: MyLinkObject[] = [];
   const nodeMap: Map<string, MyNodeObject> = new Map();
@@ -97,24 +89,54 @@ export const triple2GraphData = async (triples: tripleType[]): Promise<GraphData
   return { nodes, links };
 };
 
-const MyGraph2D: React.FC<Graph2DProps> = ({ graphData }) => {
+const getNodeText = (node: MyNodeObject): string => {
+  const nodeText = node.id;
+  // 一番後ろのコロンの後ろの文字列を取得
+  const nodeTextArray = nodeText.split(":");
+  return nodeTextArray[nodeTextArray.length - 1];
+};
+
+type Graph2DProps = {
+  viewWidth: number;
+  viewHeight: number;
+  graphData: GraphData;
+};
+
+const MyGraph2D: React.FC<Graph2DProps> = ({
+  viewWidth,
+  viewHeight,
+  graphData,
+}) => {
   return (
     <>
       <ForceGraph2D
-        width={containerWidth}
-        height={containerHeight}
+        width={viewWidth}
+        height={viewHeight}
         graphData={graphData}
         nodeAutoColorBy="group"
         nodeRelSize={1}
-        nodeCanvasObject={(node, ctx, globalScale) => {
-          const label = node.id;
+        nodeCanvasObject={(node: MyNodeObject, ctx, globalScale) => {
+          const label = getNodeText(node);
           const fontSize = 12 / globalScale;
           ctx.font = `${fontSize}px Sans-Serif`;
 
+          const textWidth = ctx.measureText(label).width;
+          const bckgDimensions = [textWidth, fontSize].map(
+            (n) => n + fontSize * 0.2
+          ); // some padding
+          ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+          ctx.fillRect(
+            node.x - bckgDimensions[0] / 2,
+            node.y - bckgDimensions[1] / 2,
+            ...bckgDimensions
+          );
+
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
+          ctx.fillStyle = node.color;
           ctx.fillText(label, node.x, node.y);
 
+          node.__bckgDimensions = bckgDimensions;
         }}
       />
     </>

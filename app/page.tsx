@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  Button,
-  Col,
-  Container,
-  Input,
-  Row,
-  Spacer,
-  Spinner,
-	useSSR,
-} from "@nextui-org/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GraphData } from "react-force-graph-3d";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
@@ -32,7 +22,10 @@ const SEARCH_WORD = "ローソン";
 // const SEARCH_WORD = "東証一部上場企業";
 
 const Home = () => {
-	const { isBrowser } = useSSR();
+  const divRef = useRef(null);
+  const [graphViewWidth, setGraphViewWidth] = useState<number>(0);
+  const [graphViewHeight, setGraphViewHeight] = useState<number>(0);
+
   const [searchWord, setSearchWord] = useState<string>("ローソン");
   const [filterWord, setFilterWord] = useState<string>("Category");
   const [graphData, setGraphData] = useState<GraphData>({
@@ -50,14 +43,31 @@ const Home = () => {
     isMutating,
   } = useSWRMutation(`/api/query`, searchWordFetcher);
 
-  if (isMutating) return <Spinner />;
+  useEffect(() => {
+    if (divRef.current) {
+      setGraphViewWidth(divRef.current.clientWidth);
+      setGraphViewHeight(divRef.current.clientHeight);
+    }
+  }, []);
+
+  {
+    /* if (isMutating) return <Spinner />; */
+  }
   if (error) return <div>failed to load</div>;
 
   const onSearch = async () => {
     const rawData = await searchWordTrigger(searchWord);
     const _graphData = await triple2GraphData(rawData);
-    const filteredNodes = await filterNodes(_graphData.nodes, filterWord, searchWord);
-    const filteredLinks = await filterLinks(_graphData.links, filterWord, searchWord);
+    const filteredNodes = await filterNodes(
+      _graphData.nodes,
+      filterWord,
+      searchWord
+    );
+    const filteredLinks = await filterLinks(
+      _graphData.links,
+      filterWord,
+      searchWord
+    );
     const filteredGraphData = {
       nodes: filteredNodes,
       links: filteredLinks,
@@ -68,33 +78,55 @@ const Home = () => {
 
   return (
     <>
-      <Container>
-        <Row>
-          <Input
-            clearable
-            bordered
-            initialValue={searchWord}
-            onChange={(e) => setSearchWord(e.target.value)}
-          />
-          <Button auto onClick={onSearch}>
-            Search
-          </Button>
-        </Row>
-        <Row>
-          <Input
-            clearable
-            bordered
-            initialValue={filterWord}
-            onChange={(e) => setFilterWord(e.target.value)}
-          />
-          <Button auto>Filter</Button>
-        </Row>
-      </Container>
+      <div className="space-y-4">
+        <div className="my-4 space-y-2">
+          <div>
+            <input
+              type="text"
+              value={searchWord}
+              onChange={(e) => setSearchWord(e.target.value)}
+              className="border border-gray-400 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={onSearch}
+              className="bg-blue-500 hover:bg-blue-400 text-white rounded px-4 py-2"
+            >
+              Search
+            </button>
+          </div>
+          <div>
+            <input
+              type="text"
+              value={filterWord}
+              onChange={(e) => setFilterWord(e.target.value)}
+              className="border border-gray-400 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={onSearch}
+              className="bg-blue-500 hover:bg-blue-400 text-white rounded px-4 py-2"
+            >
+              Filter
+            </button>
+          </div>
+        </div>
 
-      <div style={{ border: "1px solid black" }}>
-        {filteredGraphData.nodes.length > 0 && (
-          <MyGraph2D graphData={filteredGraphData} />
-        )}
+        <div
+          ref={divRef}
+          className="w-screen h-screen max-h-[80vh] border border-solid border-black"
+        >
+          {isMutating && (
+            <div className="flex justify-center items-center h-screen max-h-[80vh]">
+              <p className="text-center">Loading...</p>{" "}
+            </div>
+          )}
+          {!isMutating && filteredGraphData.nodes.length > 0 && (
+            <MyGraph2D
+              viewWidth={graphViewWidth}
+              viewHeight={graphViewHeight}
+              graphData={filteredGraphData}
+            />
+          )}
+        </div>
       </div>
     </>
   );
