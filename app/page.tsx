@@ -85,14 +85,15 @@ const Home = () => {
     };
     setGraphData(_graphData);
     setFilteredGraphData(_filteredGraphData);
-		console.log(_filteredGraphData);
+    console.log(_filteredGraphData);
   };
 
   const onFilter = async () => {
     // 取得済みグラフデータからフィルタリング
-    const _filteredNodes = graphData.nodes.filter((node: MyNodeObject) =>
-      filteredNodesTextList.includes(node.id)
-    );
+    // 検索ワードは必ず入るようにする
+    const _filteredNodes = graphData.nodes.filter((node: MyNodeObject) => {
+      return filteredNodesTextList.includes(node.id) || node.id === searchWord;
+    });
 
     const _filteredLinks = graphData.links.filter((link: MyLinkObject) =>
       filteredNodesTextList.includes(link.target.id)
@@ -102,7 +103,6 @@ const Home = () => {
       nodes: _filteredNodes,
       links: _filteredLinks,
     };
-		{/* console.log(_filteredGraphData); */}
     setFilteredGraphData(_filteredGraphData);
   };
 
@@ -125,23 +125,26 @@ const Home = () => {
             </button>
           </div>
 
-          {filteredGraphData.nodes.length > 0 && (
-            <SearchList
-              contentList={removeDuplicateText(
-                filteredGraphData.nodes.map((node: MyNodeObject) => node.id)
-              )}
-              checkedContentList={filteredNodesTextList}
-              setCheckedContentList={setFilteredNodesTextList}
-              onSubmitContentList={onFilter}
-            />
-          )}
           {filteredGraphData.links.length > 0 && (
             <SearchList
+              dataType="link"
               contentList={removeDuplicateText(
                 filteredGraphData.links.map((link: MyLinkObject) => link.id)
               )}
               checkedContentList={filteredLinksTextList}
               setCheckedContentList={setFilteredLinksTextList}
+              onSubmitContentList={onFilter}
+            />
+          )}
+
+          {filteredGraphData.nodes.length > 0 && (
+            <SearchList
+              dataType="node"
+              contentList={removeDuplicateText(
+                filteredGraphData.nodes.map((node: MyNodeObject) => node.id)
+              ).filter((text) => text !== searchWord)}
+              checkedContentList={filteredNodesTextList}
+              setCheckedContentList={setFilteredNodesTextList}
               onSubmitContentList={onFilter}
             />
           )}

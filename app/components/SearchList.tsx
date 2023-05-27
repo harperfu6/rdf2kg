@@ -1,4 +1,7 @@
+type DataType = "node" | "link";
+
 type SearchListProps = {
+  dataType: DataType;
   contentList: string[];
   checkedContentList: string[];
   setCheckedContentList: (contentList: string[]) => void;
@@ -6,13 +9,17 @@ type SearchListProps = {
 };
 
 const SearchList: React.FC<SearchListProps> = ({
+  dataType,
   contentList,
   checkedContentList,
   setCheckedContentList,
   onSubmitContentList,
 }) => {
+  const serachPlaceholder = dataType === "node" ? "Search Node" : "Search Link";
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (checkedContentList.includes(e.target.value)) {
+      // フィルタリストに追加済みの場合は削除
       setCheckedContentList(
         checkedContentList.filter((content) => content !== e.target.value)
       );
@@ -45,7 +52,7 @@ const SearchList: React.FC<SearchListProps> = ({
               type="text"
               id="input-group-search"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Search user"
+              placeholder={serachPlaceholder}
             />
           </div>
         </div>
