@@ -17,43 +17,70 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
 
 import { tripleType } from "../model/rdf";
 
+export type DataType = "node" | "link";
+
 export type MyNodeObject = NodeObject & {
   group: string;
 };
 
 export type MyLinkObject = LinkObject & {
-	id: string;
+  id: string;
 };
+
+export type DataObject = MyNodeObject | MyLinkObject;
 
 export type GraphData = {
   nodes: MyNodeObject[];
   links: MyLinkObject[];
 };
 
-export const filterNodes = async (
-  nodes: MyNodeObject[],
-  filterWord: string,
-  searchWord: string
-): Promise<MyNodeObject> => {
-  const filteredNodes = nodes.filter((node) => {
-    return node.id.includes(filterWord);
+export const filterByNodes = (
+  graphData: GraphData,
+  nodes: MyNodeObject[]
+): GraphData => {
+  // ノードはそのままフィルタするノードであるかどうかで判定する
+  const filteredNodes = graphData.nodes.filter((node1) => {
+    return nodes.map((fn: MyNodeObject) => fn.id).includes(node1.id);
   });
-  const searchNode = nodes.filter((node) => {
-    return node.id === searchWord;
+
+  // リンクはソースかターゲットがフィルタするノードであるかどうかで判定する
+  const filteredLinks = graphData.links.filter((link) => {
+    return (
+      filteredNodes.some((node) => node.id === link.source.id) &&
+      filteredNodes.some((node) => node.id === link.target.id)
+    );
   });
-  filteredNodes.push(searchNode[0]);
-  return filteredNodes;
+
+  const filteredGraphData = {
+    nodes: filteredNodes,
+    links: filteredLinks,
+  };
+
+  return filteredGraphData;
 };
 
-export const filterLinks = async (
-  links: MyLinkObject[],
-  filterWord: string,
-  searchWord: string
-): Promise<MyLinkObject> => {
-  const filteredLinks = links.filter((link) => {
-    return link.source === searchWord && link.target.includes(filterWord);
+export const filterByLinks = (
+  graphData: GraphData,
+  links: MyLinkObject[]
+): GraphData => {
+  // リンクはIDが一致するかどうかで判定する
+  const filteredLinks = graphData.links.filter((link1) => {
+    return links.map((fl: MyLinkObject) => fl.id).includes(link1.id);
   });
-  return filteredLinks;
+
+  // ノードはそのままフィルタするリンクのソースとターゲットであるかどうかで判定する
+  const filteredNodes = graphData.nodes.filter((node) => {
+    return filteredLinks.some(
+      (link) => link.source.id === node.id || link.target.id === node.id
+    );
+  });
+
+  const filteredGraphData = {
+    nodes: filteredNodes,
+    links: filteredLinks,
+  };
+
+  return filteredGraphData;
 };
 
 export const triple2GraphData = async (
@@ -83,13 +110,18 @@ export const triple2GraphData = async (
       nodes.push(node);
     }
     const link: MyLinkObject = {
-			id: predicate,
+      id: predicate,
       source: subject,
       target: object,
     };
     links.push(link);
   });
-  return { nodes, links };
+
+  const graphData: GraphData = {
+    nodes,
+    links,
+  };
+  return graphData;
 };
 
 const getNodeText = (node: MyNodeObject): string => {

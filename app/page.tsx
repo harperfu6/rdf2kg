@@ -5,14 +5,15 @@ import { GraphData } from "react-force-graph-3d";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import MyGraph2D, {
-  filterLinks,
-  filterNodes,
+  DataType,
+  filterByLinks,
+  filterByNodes,
   MyLinkObject,
   MyNodeObject,
   triple2GraphData,
 } from "./components/MyGraph2D";
 import SearchList from "./components/SearchList";
-import { removeDuplicateText } from "./utils";
+import { removeDuplicateDataObject, removeDuplicateText } from "./utils";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -21,17 +22,14 @@ const searchWordFetcher = async (url: string, searchWord: { arg: string }) => {
   return data.json();
 };
 
-// const SEARCH_WORD = "東京都";
 const SEARCH_WORD = "ローソン";
-// const SEARCH_WORD = "東証一部上場企業";
 
 const Home = () => {
   const divRef = useRef(null);
   const [graphViewWidth, setGraphViewWidth] = useState<number>(0);
   const [graphViewHeight, setGraphViewHeight] = useState<number>(0);
 
-  const [searchWord, setSearchWord] = useState<string>("ローソン");
-  const [filterWord, setFilterWord] = useState<string>("");
+  const [searchWord, setSearchWord] = useState<string>(SEARCH_WORD);
   const [graphData, setGraphData] = useState<GraphData>({
     nodes: [],
     links: [],
@@ -41,10 +39,10 @@ const Home = () => {
     links: [],
   });
 
-  const [filteredNodesTextList, setFilteredNodesTextList] = useState<string[]>(
+  const [filteredNodesList, setFilteredNodesList] = useState<MyNodeObject[]>(
     []
   );
-  const [filteredLinksTextList, setFilteredLinksTextList] = useState<string[]>(
+  const [filteredLinksList, setFilteredLinksList] = useState<MyLinkObject[]>(
     []
   );
 
@@ -61,49 +59,30 @@ const Home = () => {
     }
   }, []);
 
-  {
-    /* if (isMutating) return <Spinner />; */
-  }
   if (error) return <div>failed to load</div>;
 
   const onSearch = async () => {
     const rawData = await searchWordTrigger(searchWord);
     const _graphData = await triple2GraphData(rawData);
-    const filteredNodes = await filterNodes(
-      _graphData.nodes,
-      filterWord,
-      searchWord
-    );
-    const filteredLinks = await filterLinks(
-      _graphData.links,
-      filterWord,
-      searchWord
-    );
-    const _filteredGraphData = {
-      nodes: filteredNodes,
-      links: filteredLinks,
-    };
     setGraphData(_graphData);
-    setFilteredGraphData(_filteredGraphData);
-    console.log(_filteredGraphData);
+
+    setFilteredGraphData(_graphData);
   };
 
-  const onFilter = async () => {
-    // 取得済みグラフデータからフィルタリング
-    // 検索ワードは必ず入るようにする
-    const _filteredNodes = graphData.nodes.filter((node: MyNodeObject) => {
-      return filteredNodesTextList.includes(node.id) || node.id === searchWord;
-    });
-
-    const _filteredLinks = graphData.links.filter((link: MyLinkObject) =>
-      filteredNodesTextList.includes(link.target.id)
-    );
-
-    const _filteredGraphData = {
-      nodes: _filteredNodes,
-      links: _filteredLinks,
-    };
-    setFilteredGraphData(_filteredGraphData);
+  const onFilter = (filteredType: DataType) => () => {
+    let _filteredGraphData: GraphData;
+    if (filteredType === "node") {
+      // 取得済みグラフデータからフィルタリング
+      // 検索ワードは必ず入るようにする
+      const searchWordNodeObject = graphData.nodes.find(
+        (node) => node.id === searchWord
+      );
+      _filteredGraphData = filterByNodes(graphData, filteredNodesList.concat(searchWordNodeObject));
+      setFilteredGraphData(_filteredGraphData);
+    } else if (filteredType === "link") {
+      _filteredGraphData = filterByLinks(graphData, filteredLinksList);
+      setFilteredGraphData(_filteredGraphData);
+    }
   };
 
   return (
@@ -128,24 +107,22 @@ const Home = () => {
           {filteredGraphData.links.length > 0 && (
             <SearchList
               dataType="link"
-              contentList={removeDuplicateText(
-                filteredGraphData.links.map((link: MyLinkObject) => link.id)
-              )}
-              checkedContentList={filteredLinksTextList}
-              setCheckedContentList={setFilteredLinksTextList}
-              onSubmitContentList={onFilter}
+              contentList={removeDuplicateDataObject(graphData.links)}
+              checkedContentList={filteredLinksList}
+              setCheckedContentList={setFilteredLinksList}
+              onSubmitContentList={onFilter("link")}
             />
           )}
 
           {filteredGraphData.nodes.length > 0 && (
             <SearchList
               dataType="node"
-              contentList={removeDuplicateText(
-                filteredGraphData.nodes.map((node: MyNodeObject) => node.id)
-              ).filter((text) => text !== searchWord)}
-              checkedContentList={filteredNodesTextList}
-              setCheckedContentList={setFilteredNodesTextList}
-              onSubmitContentList={onFilter}
+              contentList={removeDuplicateDataObject(graphData.nodes).filter(
+                (nodeObject: MyNodeObject) => nodeObject.id !== searchWord
+              )}
+              checkedContentList={filteredNodesList}
+              setCheckedContentList={setFilteredNodesList}
+              onSubmitContentList={onFilter("node")}
             />
           )}
         </div>
@@ -159,7 +136,7 @@ const Home = () => {
               <p className="text-center">Loading...</p>{" "}
             </div>
           )}
-          {!isMutating && filteredGraphData.nodes.length > 0 && (
+          {!isMutating && graphData.nodes.length > 0 && (
             <MyGraph2D
               viewWidth={graphViewWidth}
               viewHeight={graphViewHeight}
@@ -171,5 +148,8 @@ const Home = () => {
     </>
   );
 };
+{
+  /* graphData={filteredGraphData} */
+}
 
 export default Home;

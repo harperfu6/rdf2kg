@@ -1,11 +1,11 @@
-type DataType = "node" | "link";
+import { DataType, DataObject } from "./MyGraph2D";
 
 type SearchListProps = {
   dataType: DataType;
-  contentList: string[];
-  checkedContentList: string[];
-  setCheckedContentList: (contentList: string[]) => void;
-  onSubmitContentList: (contentList: string[]) => void;
+  contentList: DataObject[];
+  checkedContentList: DataObject[];
+  setCheckedContentList: (contentList: DataObject[]) => void;
+  onSubmitContentList: (contentList: DataObject[]) => void;
 };
 
 const SearchList: React.FC<SearchListProps> = ({
@@ -21,10 +21,15 @@ const SearchList: React.FC<SearchListProps> = ({
     if (checkedContentList.includes(e.target.value)) {
       // フィルタリストに追加済みの場合は削除
       setCheckedContentList(
-        checkedContentList.filter((content) => content !== e.target.value)
+        checkedContentList.filter(
+          (content: DataObject) => content.id !== e.target.value
+        )
       );
     } else {
-      setCheckedContentList([...checkedContentList, e.target.value]);
+      const targetContent = contentList.find(
+        (content: DataObject) => content.id === e.target.value
+      );
+      setCheckedContentList([...checkedContentList, targetContent]);
     }
   };
 
@@ -63,21 +68,21 @@ const SearchList: React.FC<SearchListProps> = ({
             aria-labelledby="dropdownSearchButton"
           >
             {contentList &&
-              contentList.map((content: string) => (
-                <li key={content}>
+              contentList.map((content: DataObject) => (
+                <li key={content.id}>
                   <div className="flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
                     <input
-                      id={content}
+                      id={content.id}
                       type="checkbox"
-                      value={content}
+                      value={content.id}
                       className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
                       onChange={handleChange}
                     />
                     <label
-                      for={content}
+                      for={content.id}
                       className="w-full max-w-[20vh] text-xs font-medium text-gray-900 rounded dark:text-gray-300 ml-3"
                     >
-                      {content}
+                      {content.id}
                     </label>
                   </div>
                 </li>
