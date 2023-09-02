@@ -1,6 +1,6 @@
 import { SparqlEndpointFetcher } from "fetch-sparql-endpoint";
 import arrayifyStream from "arrayify-stream";
-import { rawResponseType, tripleType } from "@/app/model/rdf";
+import { rawResponseType, Triple } from "@/app/model/rdf";
 
 const PREFIX = `
 PREFIX prop-ja: <http://ja.dbpedia.org/property/>
@@ -44,7 +44,7 @@ const queryReq = async (searchWord: string) => {
 const raw2response = (
   searchWord: string,
   rawResponseList: rawResponseType[]
-): tripleType[] => {
+): Triple[] => {
   return rawResponseList.map((rawResponse: rawResponseType) => {
     return {
       s: searchWord,
@@ -58,7 +58,7 @@ export const GET = async (request: Request) => {
   const { searchParams } = new URL(request.url);
   const searchWord = searchParams.get("searchWord");
 
-  const rawResponseList = await queryReq(searchWord);
-  const responseList = raw2response(searchWord, rawResponseList);
+  const rawResponseList = await queryReq(searchWord!);
+  const responseList = raw2response(searchWord!, rawResponseList);
   return new Response(JSON.stringify(responseList));
 };

@@ -15,7 +15,7 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
 // import { LinkObject, NodeObject } from "react-force-graph-3d";
 // import { ForceGraph2D } from "react-force-graph";
 
-import { tripleType } from "../model/rdf";
+import { Triple } from "../model/rdf";
 
 export type DataType = "node" | "link";
 
@@ -84,7 +84,7 @@ export const filterByLinks = (
 };
 
 export const triple2GraphData = async (
-  triples: tripleType[]
+  triples: Triple[]
 ): Promise<GraphData> => {
   const nodes: MyNodeObject[] = [];
   const links: MyLinkObject[] = [];

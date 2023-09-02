@@ -8,7 +8,7 @@ export type rawResponseType = {
   o: termValueType;
 };
 
-export type tripleType = {
+export type Triple = {
   s: string;
   p: string;
   o: string;
