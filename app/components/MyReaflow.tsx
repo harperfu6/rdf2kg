@@ -28,82 +28,123 @@ const triple2FlowData = (triples: Triple[]): FlowData => {
 };
 
 type MyReaflowProps = {
+  viewWidth: number;
+  viewHeight: number;
   triples: Triple[];
 };
 
-const MyReaflow: React.FC<MyReaflowProps> = ({ triples }) => {
-  const { nodes, edges } = triple2FlowData(triples);
+const MyReaflow: React.FC<MyReaflowProps> = ({
+  viewWidth,
+  viewHeight,
+  triples,
+}) => {
+  const tripleLengthThreshold = 50;
+	console.log("triples", triples);
+
+  const { nodes, edges } = triple2FlowData(
+    triples.slice(0, tripleLengthThreshold)
+  );
+	// console.log("nodes", nodes);
+  // console.log("edges", edges);
+
   const [zoom, setZoom] = useState<number>(0.7);
   const ref = useRef<CanvasRef | null>(null);
+
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-      }}
-    >
-      <pre
-        style={{
-          zIndex: 9,
-          position: "absolute",
-          bottom: 15,
-          right: 15,
-          background: "rgba(0, 0, 0, .5)",
-          padding: 20,
-          color: "white",
-        }}
-      >
-        Zoom: {zoom}
-        <br />
-        <button
-          style={{
-            display: "block",
-            width: "100%",
-            margin: "5px 0",
-          }}
-          onClick={() => ref.current.zoomIn()}
-        >
-          Zoom In
-        </button>
-        <button
-          style={{
-            display: "block",
-            width: "100%",
-            margin: "5px 0",
-          }}
-          onClick={() => ref.current.zoomOut()}
-        >
-          Zoom Out
-        </button>
-        <button
-          style={{
-            display: "block",
-            width: "100%",
-          }}
-          onClick={() => ref.current.fitCanvas()}
-        >
-          Fit
-        </button>
-      </pre>
+    <>
+      {triples.length > tripleLengthThreshold && (
+        <>
+          <div>Showing only first {tripleLengthThreshold} triples </div>
+          <div>Potentially {triples.length} triples </div>
+        </>
+      )}
       <Canvas
+        width={viewWidth}
+        height={viewHeight}
         maxZoom={0.2}
         minZoom={-0.9}
-				direction="RIGHT"
+        direction="RIGHT"
         zoom={zoom}
         ref={ref}
         nodes={nodes}
         edges={edges}
         onZoomChange={(z) => {
-          console.log("zooming", z);
           setZoom(z);
         }}
-        onLayoutChange={(layout) => console.log("Layout", layout)}
       />
-    </div>
+    </>
   );
+
+  // return (
+  //   <div
+  //     style={{
+  //       position: "absolute",
+  //       top: 0,
+  //       bottom: 0,
+  //       left: 0,
+  //       right: 0,
+  //     }}
+  //   >
+  //     <pre
+  //       style={{
+  //         zIndex: 9,
+  //         position: "absolute",
+  //         bottom: 15,
+  //         right: 15,
+  //         background: "rgba(0, 0, 0, .5)",
+  //         padding: 20,
+  //         color: "white",
+  //       }}
+  //     >
+  //       Zoom: {zoom}
+  //       <br />
+  //       <button
+  //         style={{
+  //           display: "block",
+  //           width: "100%",
+  //           margin: "5px 0",
+  //         }}
+  //         onClick={() => ref.current.zoomIn()}
+  //       >
+  //         Zoom In
+  //       </button>
+  //       <button
+  //         style={{
+  //           display: "block",
+  //           width: "100%",
+  //           margin: "5px 0",
+  //         }}
+  //         onClick={() => ref.current.zoomOut()}
+  //       >
+  //         Zoom Out
+  //       </button>
+  //       <button
+  //         style={{
+  //           display: "block",
+  //           width: "100%",
+  //         }}
+  //         onClick={() => ref.current.fitCanvas()}
+  //       >
+  //         Fit
+  //       </button>
+  //     </pre>
+  //     <Canvas
+  //       width={viewWidth}
+  //       height={viewHeight}
+  //       maxZoom={0.2}
+  //       minZoom={-0.9}
+  //       direction="RIGHT"
+  //       zoom={zoom}
+  //       ref={ref}
+  //       nodes={nodes}
+  //       edges={edges}
+  //       onZoomChange={(z) => {
+  //         setZoom(z);
+  //       }}
+  //       onLayoutChange={(layout) => console.log("Layout", layout)}
+  //     />
+  //   </div>
+  // );
 };
 
 export default MyReaflow;

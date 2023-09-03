@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { GraphData } from "react-force-graph-3d";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
+import FilterPattern from "./components/FilterPattern";
 import MyGraph2D, {
   DataType,
   filterByLinks,
@@ -15,16 +16,35 @@ import MyGraph2D, {
 import MyReaflow from "./components/MyReaflow";
 import SearchList from "./components/SearchList";
 import { Triple } from "./model/rdf";
-import { removeDuplicateDataObject, removeDuplicateText } from "./utils";
+import {
+  filterInTriple,
+  filterOutTriple,
+  removeDuplicateDataObject,
+  removeDuplicateText,
+} from "./utils";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-const searchWordFetcher = async (url: string, searchWord: { arg: string }) => {
-  const data = await fetch(`${url}?searchWord=${searchWord.arg}`);
+const searchWordFetcher = async (url: string, searchWords: { arg: string }) => {
+  const data = await fetch(`${url}?searchWords=${searchWords.arg}`);
   return data.json();
 };
 
-const SEARCH_WORD = "ローソン";
+const SEARCH_WORD = "ローソン ファミリーマート 丸亀製麺";
+const defaultFilteredInRegexes = [
+  // resourceノードのみを抽出
+	"http://ja.dbpedia.org/resource/+",
+];
+const defaultFilteredOutRegexes = [
+  // 日付ノードは除外
+	"http://ja.dbpedia.org/resource/(\\d{1})月(\\d{1})日",
+  "http://ja.dbpedia.org/resource/(\\d{1})月(\\d{2})日",
+  "http://ja.dbpedia.org/resource/(\\d{2})月(\\d{1})日",
+  "http://ja.dbpedia.org/resource/(\\d{2})月(\\d{2})日",
+  "http://ja.dbpedia.org/resource/(\\d{4})年",
+  // テンプレートノードは除外
+  "http://ja.dbpedia.org/resource/Template:+",
+];
 
 const Home = () => {
   const divRef = useRef(null);
@@ -33,34 +53,40 @@ const Home = () => {
 
   const [triples, setTriples] = useState<Triple[]>([]);
 
-  const [searchWord, setSearchWord] = useState<string>(SEARCH_WORD);
-  const [graphData, setGraphData] = useState<GraphData>({
-    nodes: [],
-    links: [],
-  });
-  const [filteredGraphData, setFilteredGraphData] = useState<GraphData>({
-    nodes: [],
-    links: [],
-  });
-
-  const [filteredNodesList, setFilteredNodesList] = useState<MyNodeObject[]>(
-    []
+  const [searchWords, setSearchWords] = useState<string>(SEARCH_WORD);
+  const [filteredInRegexes, setFilteredInRegexes] = useState<string[]>(
+    defaultFilteredInRegexes
   );
-  const [filteredLinksList, setFilteredLinksList] = useState<MyLinkObject[]>(
-    []
+  const [filteredOutRegexes, setFilteredOutRegexes] = useState<string[]>(
+    defaultFilteredOutRegexes
   );
 
-  // const {
-  //   trigger: searchWordTrigger,
-  //   error,
-  //   isMutating,
-  // } = useSWRMutation(`/api/query`, searchWordFetcher);
+  // const [graphData, setGraphData] = useState<GraphData>({
+  //   nodes: [],
+  //   links: [],
+  // });
+  // const [filteredGraphData, setFilteredGraphData] = useState<GraphData>({
+  //   nodes: [],
+  //   links: [],
+  // });
+  // const [filteredNodesList, setFilteredNodesList] = useState<MyNodeObject[]>(
+  //   []
+  // );
+  // const [filteredLinksList, setFilteredLinksList] = useState<MyLinkObject[]>(
+  //   []
+  // );
 
   const {
     trigger: searchWordTrigger,
     error,
     isMutating,
-  } = useSWRMutation(`/api/file`, searchWordFetcher);
+  } = useSWRMutation(`/api/query`, searchWordFetcher);
+
+  // const {
+  //   trigger: searchWordTrigger,
+  //   error,
+  //   isMutating,
+  // } = useSWRMutation(`/api/file`, searchWordFetcher);
 
   useEffect(() => {
     if (divRef.current) {
@@ -72,8 +98,12 @@ const Home = () => {
   if (error) return <div>failed to load</div>;
 
   const onSearch = async () => {
-    const triples = await searchWordTrigger(searchWord);
-    setTriples(triples.splice(0, 20));
+    const triples = await searchWordTrigger(searchWords);
+    const filteredTriples = filterOutTriple(
+      filterInTriple(triples, filteredInRegexes),
+      filteredOutRegexes
+    );
+    setTriples(filteredTriples);
     // const _graphData = await triple2GraphData(triples);
     // setGraphData(_graphData);
 
@@ -169,8 +199,8 @@ const Home = () => {
           <div className="flex flex-row">
             <input
               type="text"
-              value={searchWord}
-              onChange={(e) => setSearchWord(e.target.value)}
+              value={searchWords}
+              onChange={(e) => setSearchWords(e.target.value)}
               className="basis-3/4 border border-gray-400 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
@@ -180,14 +210,32 @@ const Home = () => {
               Search
             </button>
           </div>
+          <FilterPattern
+            filterPatterns={defaultFilteredInRegexes}
+            checkedFilterPatterns={filteredInRegexes}
+            setCheckedFilterPatterns={setFilteredInRegexes}
+            isIn={true}
+          />
+          <FilterPattern
+            filterPatterns={defaultFilteredOutRegexes}
+            checkedFilterPatterns={filteredOutRegexes}
+            setCheckedFilterPatterns={setFilteredOutRegexes}
+            isIn={false}
+          />
         </div>
-        <MyReaflow triples={triples} />
+        <div
+          ref={divRef}
+          className="basis-5/6 h-screen max-h-[95vh] mx-2 border border-solid border-black"
+        >
+          <MyReaflow
+            viewWidth={graphViewWidth}
+            viewHeight={graphViewHeight}
+            triples={triples}
+          />
+        </div>
       </div>
     </>
   );
 };
-{
-  /* graphData={filteredGraphData} */
-}
 
 export default Home;

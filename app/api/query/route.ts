@@ -20,15 +20,31 @@ WHERE
 }
 `;
 
-const SELECT_QUERY_GENERAL = (searchWord: string) => `
-SELECT DISTINCT *
-WHERE
-{
-  <http://ja.dbpedia.org/resource/${searchWord}> ?p ?o .
-}
-`;
+const SELECT_QUERY_GENERAL = (searchWords: string[]) => {
+  const whereClouse = searchWords.reduce((acc: string, searchWord: string) => {
+    return acc + `<http://ja.dbpedia.org/resource/${searchWord}> ?p ?o .\n`;
+  }, "");
 
-const queryReq = async (searchWord: string) => {
+  return `
+	SELECT DISTINCT *
+	WHERE
+	{
+	${whereClouse}
+	}
+	`;
+};
+
+// `
+// SELECT DISTINCT *
+// WHERE
+// {
+//   <http://ja.dbpedia.org/resource/${searchWord}> ?p ?o .
+// }
+// `;
+
+const queryReq = async (searchWords: string[]) => {
+	// return SELECT_QUERY_GENERAL(searchWords);
+
   const config = {
     method: "GET",
   };
@@ -36,29 +52,38 @@ const queryReq = async (searchWord: string) => {
   const endpoint = "http://ja.dbpedia.org/sparql";
   const query = `
 	${PREFIX}
-	${SELECT_QUERY_GENERAL(searchWord)}
+	${SELECT_QUERY_GENERAL(searchWords)}
 	`;
   return await arrayifyStream(await fether.fetchBindings(endpoint, query));
 };
 
 const raw2response = (
-  searchWord: string,
+  searchWords: string[],
   rawResponseList: rawResponseType[]
 ): Triple[] => {
-  return rawResponseList.map((rawResponse: rawResponseType) => {
-    return {
-      s: searchWord,
-      p: rawResponse.p.value,
-      o: rawResponse.o.value,
-    };
-  });
+  return searchWords
+    .map((searchWord: string) => {
+      return rawResponseList.map((rawResponse: rawResponseType) => {
+        return {
+          s: searchWord,
+          p: rawResponse.p.value,
+          o: rawResponse.o.value,
+        };
+      });
+    })
+    .flat();
+};
+
+const serchWordsStr2Array = (searchWordsStr: string): string[] => {
+  return searchWordsStr.split(" ");
 };
 
 export const GET = async (request: Request) => {
   const { searchParams } = new URL(request.url);
-  const searchWord = searchParams.get("searchWord");
+  const searchWordsStr = searchParams.get("searchWords");
+  const searchWords = serchWordsStr2Array(searchWordsStr!);
 
-  const rawResponseList = await queryReq(searchWord!);
-  const responseList = raw2response(searchWord!, rawResponseList);
+  const rawResponseList = await queryReq(searchWords);
+  const responseList = raw2response(searchWords, rawResponseList);
   return new Response(JSON.stringify(responseList));
 };
