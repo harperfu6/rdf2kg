@@ -5,7 +5,7 @@ import { Triple } from "@/app/model/rdf";
 export const fetchFiles = async () => {
   const jsonDirectory = path.join(process.cwd(), "datasets", "n3");
   const fileContents = await fs.readFile(
-    jsonDirectory + `/all.n3`,
+    jsonDirectory + `/multihops.n3`,
     "utf8"
   );
   return fileContents;

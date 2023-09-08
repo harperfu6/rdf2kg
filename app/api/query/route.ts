@@ -20,18 +20,29 @@ WHERE
 }
 `;
 
-const SELECT_QUERY_GENERAL = (searchWords: string[]) => {
-  const whereClouse = searchWords.reduce((acc: string, searchWord: string) => {
-    return acc + `<http://ja.dbpedia.org/resource/${searchWord}> ?p ?o .\n`;
-  }, "");
+// const SELECT_QUERY_GENERAL = (searchWords: string[]) => {
+//   const whereClouse = searchWords.reduce((acc: string, searchWord: string) => {
+//     return acc + `<http://ja.dbpedia.org/resource/${searchWord}> ?p ?o .\n`;
+//   }, "");
+// 
+//   return `
+// 	SELECT DISTINCT *
+// 	WHERE
+// 	{
+// 	${whereClouse}
+// 	}
+// 	`;
+// };
 
-  return `
-	SELECT DISTINCT *
+const SELECT_QUERY_GENERAL = (searchWords: string[]) => {
+	`
+	SELECT DISTINCT 
 	WHERE
 	{
-	${whereClouse}
+		<http://ja.dbpedia.org/resource/ローソン> ?p ?o .
+		?o ?p2 ?o2 .
 	}
-	`;
+	`
 };
 
 // `
@@ -43,7 +54,7 @@ const SELECT_QUERY_GENERAL = (searchWords: string[]) => {
 // `;
 
 const queryReq = async (searchWords: string[]) => {
-	// return SELECT_QUERY_GENERAL(searchWords);
+  // return SELECT_QUERY_GENERAL(searchWords);
 
   const config = {
     method: "GET",

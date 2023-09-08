@@ -39,10 +39,9 @@ const MyReaflow: React.FC<MyReaflowProps> = ({
   triples,
 }) => {
   const tripleLengthThreshold = 50;
-	console.log("triples", triples);
 
   const { nodes, edges } = triple2FlowData(
-    triples.slice(0, tripleLengthThreshold)
+    triples.slice(0, Math.min(triples.length-1, tripleLengthThreshold))
   );
 	// console.log("nodes", nodes);
   // console.log("edges", edges);

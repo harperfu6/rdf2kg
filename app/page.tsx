@@ -30,10 +30,11 @@ const searchWordFetcher = async (url: string, searchWords: { arg: string }) => {
   return data.json();
 };
 
-const SEARCH_WORD = "ローソン ファミリーマート 丸亀製麺";
+const SEARCH_WORD = "ローソン ファミリーマート";
 const defaultFilteredInRegexes = [
   // resourceノードのみを抽出
-	"http://ja.dbpedia.org/resource/+",
+	// "http://ja.dbpedia.org/resource/+",
+	// "http://ja.dbpedia.org/resource/Category+",
 ];
 const defaultFilteredOutRegexes = [
   // 日付ノードは除外
@@ -76,17 +77,18 @@ const Home = () => {
   //   []
   // );
 
-  const {
-    trigger: searchWordTrigger,
-    error,
-    isMutating,
-  } = useSWRMutation(`/api/query`, searchWordFetcher);
-
-  // const {
+	// const {
   //   trigger: searchWordTrigger,
   //   error,
   //   isMutating,
-  // } = useSWRMutation(`/api/file`, searchWordFetcher);
+  // } = useSWRMutation(`/api/query`, searchWordFetcher);
+
+	// read local test file
+  const {
+    trigger: trigger,
+    error,
+    isMutating,
+  } = useSWRMutation(`/api/file`, fetcher);
 
   useEffect(() => {
     if (divRef.current) {
@@ -98,7 +100,10 @@ const Home = () => {
   if (error) return <div>failed to load</div>;
 
   const onSearch = async () => {
-    const triples = await searchWordTrigger(searchWords);
+		// const triples = await searchWordTrigger(searchWords);
+		// read local test file
+    const triples = await trigger();
+
     const filteredTriples = filterOutTriple(
       filterInTriple(triples, filteredInRegexes),
       filteredOutRegexes

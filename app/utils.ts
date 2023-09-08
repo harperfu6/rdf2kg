@@ -19,30 +19,38 @@ export const filterInTriple = (
   triples: Triple[],
   filterRegexs: string[]
 ): Triple[] => {
-  return triples.filter((triple) => {
-    return filterRegexs.some((regex) => {
-      const pattern = new RegExp(regex);
-      return (
-        pattern.test(triple.s) ||
-        pattern.test(triple.p) ||
-        pattern.test(triple.o)
-      );
+  if (filterRegexs.length === 0) {
+    return triples;
+  } else {
+    return triples.filter((triple) => {
+      return filterRegexs.some((regex) => {
+        const pattern = new RegExp(regex);
+        return (
+          pattern.test(triple.s) ||
+          pattern.test(triple.p) ||
+          pattern.test(triple.o)
+        );
+      });
     });
-  });
+  }
 };
 
 export const filterOutTriple = (
   triples: Triple[],
   filterRegexs: string[]
 ): Triple[] => {
-  return triples.filter((triple) => {
-    return filterRegexs.every((regex) => {
-      const pattern = new RegExp(regex);
-      return (
-        !pattern.test(triple.s) &&
-        !pattern.test(triple.p) &&
-        !pattern.test(triple.o)
-      );
+  if (filterRegexs.length === 0) {
+    return triples;
+  } else {
+    return triples.filter((triple) => {
+      return filterRegexs.every((regex) => {
+        const pattern = new RegExp(regex);
+        return (
+          !pattern.test(triple.s) &&
+          !pattern.test(triple.p) &&
+          !pattern.test(triple.o)
+        );
+      });
     });
-  });
+  }
 };
