@@ -34,16 +34,37 @@ WHERE
 // 	`;
 // };
 
-const SELECT_QUERY_GENERAL = (searchWords: string[]) => {
+const SELECT_QUERY_GENERAL = (searchWords: string[]) =>
+	//`
+	//SELECT DISTINCT *
+	//WHERE
+	//{
+	//	{
+	//		?s ?p ?o
+	//		FILTER (?s = <http://ja.dbpedia.org/resource/ローソン>)
+	//	}
+	//	UNION
+	//	{
+	//		?s ?p ?o
+	//		FILTER (?s = <http://ja.dbpedia.org/resource/ファミリーマート>)
+	//	}
+	//}
+	//`
 	`
-	SELECT DISTINCT 
+	SELECT DISTINCT *
 	WHERE
 	{
-		<http://ja.dbpedia.org/resource/ローソン> ?p ?o .
-		?o ?p2 ?o2 .
+		{
+			?s ?p ?o
+			FILTER (?s = <http://ja.dbpedia.org/resource/ローソン>)
+		}
+		UNION
+		{
+			?s ?p ?o
+			FILTER (?s = <http://ja.dbpedia.org/resource/ファミリーマート>)
+		}
 	}
 	`
-};
 
 // `
 // SELECT DISTINCT *
@@ -76,7 +97,8 @@ const raw2response = (
     .map((searchWord: string) => {
       return rawResponseList.map((rawResponse: rawResponseType) => {
         return {
-          s: searchWord,
+          // s: searchWord,
+          s: rawResponse.s.value,
           p: rawResponse.p.value,
           o: rawResponse.o.value,
         };
@@ -84,6 +106,7 @@ const raw2response = (
     })
     .flat();
 };
+
 
 const serchWordsStr2Array = (searchWordsStr: string): string[] => {
   return searchWordsStr.split(" ");

@@ -31,23 +31,28 @@ type MyReaflowProps = {
   viewWidth: number;
   viewHeight: number;
   triples: Triple[];
+  zoom: number;
+  setZoom: React.Dispatch<React.SetStateAction<number>>;
+  canvasRef: React.RefObject<CanvasRef>;
 };
 
 const MyReaflow: React.FC<MyReaflowProps> = ({
   viewWidth,
   viewHeight,
   triples,
+  zoom,
+  setZoom,
+  canvasRef,
 }) => {
-  const tripleLengthThreshold = 50;
+  const tripleLengthThreshold = 200;
 
   const { nodes, edges } = triple2FlowData(
-    triples.slice(0, Math.min(triples.length-1, tripleLengthThreshold))
+    triples.slice(0, Math.min(triples.length - 1, tripleLengthThreshold))
   );
-	// console.log("nodes", nodes);
+  // console.log("nodes", nodes);
   // console.log("edges", edges);
 
-  const [zoom, setZoom] = useState<number>(0.7);
-  const ref = useRef<CanvasRef | null>(null);
+  // console.log("zoom", zoom);
 
   return (
     <>
@@ -60,11 +65,11 @@ const MyReaflow: React.FC<MyReaflowProps> = ({
       <Canvas
         width={viewWidth}
         height={viewHeight}
-        maxZoom={0.2}
-        minZoom={-0.9}
+        maxZoom={2.0}
+        minZoom={-2.0}
         direction="RIGHT"
         zoom={zoom}
-        ref={ref}
+        ref={canvasRef}
         nodes={nodes}
         edges={edges}
         onZoomChange={(z) => {
@@ -74,76 +79,76 @@ const MyReaflow: React.FC<MyReaflowProps> = ({
     </>
   );
 
-  // return (
-  //   <div
-  //     style={{
-  //       position: "absolute",
-  //       top: 0,
-  //       bottom: 0,
-  //       left: 0,
-  //       right: 0,
-  //     }}
-  //   >
-  //     <pre
-  //       style={{
-  //         zIndex: 9,
-  //         position: "absolute",
-  //         bottom: 15,
-  //         right: 15,
-  //         background: "rgba(0, 0, 0, .5)",
-  //         padding: 20,
-  //         color: "white",
-  //       }}
-  //     >
-  //       Zoom: {zoom}
-  //       <br />
-  //       <button
-  //         style={{
-  //           display: "block",
-  //           width: "100%",
-  //           margin: "5px 0",
-  //         }}
-  //         onClick={() => ref.current.zoomIn()}
-  //       >
-  //         Zoom In
-  //       </button>
-  //       <button
-  //         style={{
-  //           display: "block",
-  //           width: "100%",
-  //           margin: "5px 0",
-  //         }}
-  //         onClick={() => ref.current.zoomOut()}
-  //       >
-  //         Zoom Out
-  //       </button>
-  //       <button
-  //         style={{
-  //           display: "block",
-  //           width: "100%",
-  //         }}
-  //         onClick={() => ref.current.fitCanvas()}
-  //       >
-  //         Fit
-  //       </button>
-  //     </pre>
-  //     <Canvas
-  //       width={viewWidth}
-  //       height={viewHeight}
-  //       maxZoom={0.2}
-  //       minZoom={-0.9}
-  //       direction="RIGHT"
-  //       zoom={zoom}
-  //       ref={ref}
-  //       nodes={nodes}
-  //       edges={edges}
-  //       onZoomChange={(z) => {
-  //         setZoom(z);
-  //       }}
-  //       onLayoutChange={(layout) => console.log("Layout", layout)}
-  //     />
-  //   </div>
-  // );
+  //return (
+  //  <div
+  //    style={{
+  //      position: "absolute",
+  //      top: 0,
+  //      bottom: 0,
+  //      left: 0,
+  //      right: 0,
+  //    }}
+  //  >
+  //    <pre
+  //      style={{
+  //        zIndex: 9,
+  //        position: "absolute",
+  //        bottom: 15,
+  //        right: 15,
+  //        background: "rgba(0, 0, 0, .5)",
+  //        padding: 20,
+  //        color: "white",
+  //      }}
+  //    >
+  //      Zoom: {zoom}
+  //      <br />
+  //      <button
+  //        style={{
+  //          display: "block",
+  //          width: "100%",
+  //          margin: "5px 0",
+  //        }}
+  //        onClick={() => ref.current.zoomIn()}
+  //      >
+  //        Zoom In
+  //      </button>
+  //      <button
+  //        style={{
+  //          display: "block",
+  //          width: "100%",
+  //          margin: "5px 0",
+  //        }}
+  //        onClick={() => ref.current.zoomOut()}
+  //      >
+  //        Zoom Out
+  //      </button>
+  //      <button
+  //        style={{
+  //          display: "block",
+  //          width: "100%",
+  //        }}
+  //        onClick={() => ref.current.fitCanvas()}
+  //      >
+  //        Fit
+  //      </button>
+  //    </pre>
+  //    <Canvas
+  //      width={viewWidth}
+  //      height={viewHeight}
+  //      maxZoom={0.2}
+  //      minZoom={-0.9}
+  //      direction="RIGHT"
+  //      zoom={zoom}
+  //      ref={ref}
+  //      nodes={nodes}
+  //      edges={edges}
+  //      onZoomChange={(z) => {
+  //        setZoom(z);
+  //      }}
+  //      onLayoutChange={(layout) => console.log("Layout", layout)}
+  //    />
+  //  </div>
+  //);
 };
 
 export default MyReaflow;

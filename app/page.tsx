@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CanvasRef } from "reaflow";
 import { GraphData } from "react-force-graph-3d";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
@@ -22,6 +23,7 @@ import {
   removeDuplicateDataObject,
   removeDuplicateText,
 } from "./utils";
+import Zoom from "./components/Zoom";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -33,12 +35,12 @@ const searchWordFetcher = async (url: string, searchWords: { arg: string }) => {
 const SEARCH_WORD = "ローソン ファミリーマート";
 const defaultFilteredInRegexes = [
   // resourceノードのみを抽出
-	// "http://ja.dbpedia.org/resource/+",
-	// "http://ja.dbpedia.org/resource/Category+",
+  "http://ja.dbpedia.org/resource/+",
+  // "http://ja.dbpedia.org/resource/Category+",
 ];
 const defaultFilteredOutRegexes = [
   // 日付ノードは除外
-	"http://ja.dbpedia.org/resource/(\\d{1})月(\\d{1})日",
+  "http://ja.dbpedia.org/resource/(\\d{1})月(\\d{1})日",
   "http://ja.dbpedia.org/resource/(\\d{1})月(\\d{2})日",
   "http://ja.dbpedia.org/resource/(\\d{2})月(\\d{1})日",
   "http://ja.dbpedia.org/resource/(\\d{2})月(\\d{2})日",
@@ -49,6 +51,12 @@ const defaultFilteredOutRegexes = [
 
 const Home = () => {
   const divRef = useRef(null);
+  const canvasRef = useRef<CanvasRef>(null);
+  const [zoom, setZoom] = useState<number>(0.1);
+  const [canvas, setCanvas] = useState({
+    zoom: 0.1,
+  });
+
   const [graphViewWidth, setGraphViewWidth] = useState<number>(0);
   const [graphViewHeight, setGraphViewHeight] = useState<number>(0);
 
@@ -62,28 +70,14 @@ const Home = () => {
     defaultFilteredOutRegexes
   );
 
-  // const [graphData, setGraphData] = useState<GraphData>({
-  //   nodes: [],
-  //   links: [],
-  // });
-  // const [filteredGraphData, setFilteredGraphData] = useState<GraphData>({
-  //   nodes: [],
-  //   links: [],
-  // });
-  // const [filteredNodesList, setFilteredNodesList] = useState<MyNodeObject[]>(
-  //   []
-  // );
-  // const [filteredLinksList, setFilteredLinksList] = useState<MyLinkObject[]>(
-  //   []
-  // );
-
-	// const {
+  // get data from api
+  // const {
   //   trigger: searchWordTrigger,
   //   error,
   //   isMutating,
   // } = useSWRMutation(`/api/query`, searchWordFetcher);
 
-	// read local test file
+  // get data from file
   const {
     trigger: trigger,
     error,
@@ -100,8 +94,11 @@ const Home = () => {
   if (error) return <div>failed to load</div>;
 
   const onSearch = async () => {
-		// const triples = await searchWordTrigger(searchWords);
-		// read local test file
+    // get data from api
+    // const triples = await searchWordTrigger(searchWords);
+    // console.log(triples);
+
+    // get data from file
     const triples = await trigger();
 
     const filteredTriples = filterOutTriple(
@@ -114,88 +111,6 @@ const Home = () => {
 
     // setFilteredGraphData(_graphData);
   };
-
-  // const onFilter = (filteredType: DataType) => () => {
-  //   let _filteredGraphData: GraphData;
-  //   if (filteredType === "node") {
-  //     // 取得済みグラフデータからフィルタリング
-  //     // 検索ワードは必ず入るようにする
-  //     const searchWordNodeObject = graphData.nodes.find(
-  //       (node) => node.id === searchWord
-  //     );
-  //     _filteredGraphData = filterByNodes(
-  //       graphData,
-  //       filteredNodesList.concat(searchWordNodeObject)
-  //     );
-  //     setFilteredGraphData(_filteredGraphData);
-  //   } else if (filteredType === "link") {
-  //     _filteredGraphData = filterByLinks(graphData, filteredLinksList);
-  //     setFilteredGraphData(_filteredGraphData);
-  //   }
-  // };
-
-  // return (
-  //   <>
-  //     <div className="flex flex-row my-4">
-  //       <div className="basis-1/6 mx-2 space-y-2">
-  //         <div className="flex flex-row">
-  //           <input
-  //             type="text"
-  //             value={searchWord}
-  //             onChange={(e) => setSearchWord(e.target.value)}
-  //             className="basis-3/4 border border-gray-400 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-  //           />
-  //           <button
-  //             onClick={onSearch}
-  //             className="basis-1/4 bg-blue-500 hover:bg-blue-400 text-white px-4 py-2"
-  //           >
-  //             Search
-  //           </button>
-  //         </div>
-
-  //         {filteredGraphData.links.length > 0 && (
-  //           <SearchList
-  //             dataType="link"
-  //             contentList={removeDuplicateDataObject(graphData.links)}
-  //             checkedContentList={filteredLinksList}
-  //             setCheckedContentList={setFilteredLinksList}
-  //             onSubmitContentList={onFilter("link")}
-  //           />
-  //         )}
-
-  //         {filteredGraphData.nodes.length > 0 && (
-  //           <SearchList
-  //             dataType="node"
-  //             contentList={removeDuplicateDataObject(graphData.nodes).filter(
-  //               (nodeObject: MyNodeObject) => nodeObject.id !== searchWord
-  //             )}
-  //             checkedContentList={filteredNodesList}
-  //             setCheckedContentList={setFilteredNodesList}
-  //             onSubmitContentList={onFilter("node")}
-  //           />
-  //         )}
-  //       </div>
-
-  //       <div
-  //         ref={divRef}
-  //         className="basis-4/6 h-screen max-h-[80vh] mx-2 border border-solid border-black"
-  //       >
-  //         {isMutating && (
-  //           <div className="flex justify-center items-center h-screen max-h-[80vh]">
-  //             <p className="text-center">Loading...</p>{" "}
-  //           </div>
-  //         )}
-  //         {!isMutating && graphData.nodes.length > 0 && (
-  //           <MyGraph2D
-  //             viewWidth={graphViewWidth}
-  //             viewHeight={graphViewHeight}
-  //             graphData={filteredGraphData}
-  //           />
-  //         )}
-  //       </div>
-  //     </div>
-  //   </>
-  // );
 
   return (
     <>
@@ -227,6 +142,7 @@ const Home = () => {
             setCheckedFilterPatterns={setFilteredOutRegexes}
             isIn={false}
           />
+          <Zoom zoom={zoom} setZoom={setZoom} canvasRef={canvasRef} />
         </div>
         <div
           ref={divRef}
@@ -236,6 +152,9 @@ const Home = () => {
             viewWidth={graphViewWidth}
             viewHeight={graphViewHeight}
             triples={triples}
+            zoom={zoom}
+            setZoom={setZoom}
+            canvasRef={canvasRef}
           />
         </div>
       </div>

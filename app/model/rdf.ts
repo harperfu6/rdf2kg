@@ -4,6 +4,7 @@ export type termValueType = {
 };
 
 export type rawResponseType = {
+  s: termValueType;
   p: termValueType;
   o: termValueType;
 };
